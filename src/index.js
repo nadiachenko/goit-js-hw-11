@@ -1,78 +1,95 @@
 
+import Notiflix from 'notiflix';
+// import axios from "axios"
+//  axios.defaults.headers.common['x-api-key'] = '40934415-dfd7c79ea7303db44ba7dd17c';
 
-// import Notiflix from 'notiflix';
-// import { fetchCats, fetchCatByBreed } from './cat-api.js'
+import SearchImageClass from './images-api.js'
 
-// const refs = {
-//   selectField: document.querySelector('.breed-select'),
-//   catInfo: document.querySelector('.cat-info'),
-//   loader: document.querySelector('.loader'),
-//   errorMessage: document.querySelector('.error')
-// }
-// refs.selectField.hidden = true;
-// refs.errorMessage.hidden = true;
+const refs = {
+    searchBtn: document.querySelector('button[type="submit"]'),
+    searchForm: document.querySelector('.search-form'),
+    loadMore: document.querySelector('.load-more'),
+    gallery: document.querySelector('.gallery')
 
-
-// fetchCats().then(cats => {
-//   refs.loader.hidden = true;
-//   refs.errorMessage.hidden = true;
-//   renderCats(cats);
-// })
-//   .catch(() => {
-//     Notiflix.Notify.failure('Oops! Something went wrong! Try reloading the page!');
-
-//   })
+}
+refs.loadMore.style.visibility = 'hidden';
 
 
-// function renderCats(cats) {
-//   refs.selectField.hidden = false;
+console.log(refs.loadMore)
+const searchImageClass = new SearchImageClass();
 
-//   refs.loader.hidden = true;
-//   const markup = cats
-//     .map((cat) => {
+refs.searchForm.addEventListener("submit", searchImage);
 
-//       return `<option value="${cat.id}">${cat.name}</option>`;
-//     })
-//     .join("");
-//   refs.selectField.insertAdjacentHTML("beforeend", markup);
+function searchImage(e) {
+    e.preventDefault();
+ 
+    refs.gallery.innerHTML = "";
+    searchImageClass.query = e.currentTarget.elements.searchQuery.value;
+    searchImageClass.resetPage()
+    displayFetchedImages()   
+}
 
-// }
-
-// //EVENT
-
-// refs.selectField.addEventListener("input", displayCat)
+refs.loadMore.addEventListener("click", displayFetchedImages);
 
 
-// function displayCat() {
-//   refs.loader.hidden = false;
-//   refs.catInfo.style.visibility = 'hidden';   
-//   fetchCatByBreed(refs.selectField.value)
-//     .then(cat => {
+function displayFetchedImages() {
 
-//       console.log(cat)
-//       renderCat(cat);
+  loadMoreDisable()
+  searchImageClass.fetchImages()
+    .then(renderImages,loadMoreEnable)
+    .catch(() => {
+      Notiflix.Notify.failure('Oops! Something went wrong! Try reloading the page!');
+  
+    })
+  }
 
-//     })
-//     .catch(() => {
-//       Notiflix.Notify.failure('Oops! Something went wrong! Try reloading the page!');
-//     })
-//   console.log(refs.selectField.value);
-// }
 
-// function renderCat(cat) {
-//  refs.catInfo.textContent = '';
-//  refs.catInfo.style.visibility = 'visible'; 
-//   refs.catInfo.hidden = false;
-//   refs.loader.hidden = true;
-//   const catMarkup = `<img width='500' height='500' src="${cat[0].url}"/>
-//  <div class="text-content">
+function loadMoreDisable() {
+  refs.loadMore.style.visibility = 'visible';
+  refs.loadMore.disabled = true;
+  refs.loadMore.textContent = 'Loading...';  
+  
+}
+function loadMoreEnable() {
+  refs.loadMore.disabled = false;
+  refs.loadMore.style.visibility = 'visible';
+  refs.loadMore.textContent = 'Load more';  
+}
 
-//   <h2>${cat[0].breeds[0].name}</h3>
-//   <div class ='description'>${cat[0].breeds[0].description}</div>
-//   <h3>Temperament</h2>
-//   <div class='temperament'>${cat[0].breeds[0].temperament}</div>
-//   </div>`
-//   refs.catInfo.insertAdjacentHTML("beforeend", catMarkup);
+function renderImages(hits) {
+  const markup = hits
+    .map((hit) => {
+      return `<div class="photo-card">
+        <img src="${hit.webformatURL}" alt="${hit.tags}" width='360' height='270' loading="lazy" />
+        <div class="info">
+          <p class="info-item">
+            <b>Likes</b>${hit.likes}
+          </p>
+          <p class="info-item">
+            <b>Views</b>${hit.views}
+          </p>
+          <p class="info-item">
+            <b>Comments</b>${hit.comments}
+          </p>
+          <p class="info-item">
+            <b>Downloads</b>${hit.downloads}
+          </p>
+        </div>
+      </div>`;
+    })
+    .join("");
 
-// }
+  refs.gallery.insertAdjacentHTML("beforeend", markup);
+
+  if (hits.length < 40) {
+    refs.loadMore.style.visibility = 'hidden';
+    Notiflix.Notify.failure('"We\'re sorry, but you\'ve reached the end of search results."');
+  } else {
+    loadMoreEnable();
+  }
+}
+
+
+
+
 
