@@ -32,15 +32,17 @@ function searchImage(e) {
 refs.loadMore.addEventListener("click", displayFetchedImages);
 
 
-function displayFetchedImages() {
-
-  loadMoreDisable()
-  searchImageClass.fetchImages()
-    .then(renderImages,loadMoreEnable)
-    .catch(() => {
+async function displayFetchedImages() {
+try {
+loadMoreDisable();
+  const fetched = await searchImageClass.fetchImages()
+   renderImages(fetched);
+   loadMoreEnable();
+  }
+    catch(err) {
       Notiflix.Notify.failure('Oops! Something went wrong! Try reloading the page!');
   
-    })
+    }
   }
 
 
